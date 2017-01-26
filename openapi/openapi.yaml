@@ -1,0 +1,293 @@
+swagger: '2.0'
+info:
+  title: Plannerstack
+  description: The Travel stops adjustment API
+  version: "0.0.1"
+schemes:
+  - http
+  - https
+basePath: /api/v1
+produces:
+  - application/json
+consumes:
+  - application/json
+
+paths:
+  /travel-stops:
+    get:
+      summary: Retrieve Travel Stops
+      operationId: api.travel_stops.get
+      description: |
+        The Travel Stops endpoint returns a list of TravelStops objects
+      parameters:
+        - name: bbox
+          in: query
+          description: >
+              The bbox parameter has the following attributes:
+
+                TopLeft
+                Top-left corner of the rectangular area.
+
+                  Latitude
+                  WGS-84 / degrees with (-90 <= Latitude <=90)
+
+                  Longitude
+                  WGS-84 / degrees with (-180 <= Longitude <=180)
+
+                BottomRight
+                Bottom-right corner of the rectangular area.
+
+                  Latitude
+                  WGS-84 / degrees with (-90 <= Latitude <=90)
+
+                  Longitude
+                  WGS-84 / degrees with (-180 <= Longitude <=180)
+
+                format
+                  
+                  {TopLeft.Latitude} + "," + {TopLeft.Longitude} + ";" + {BottomRight.Latitude} + "," + {BottomRight.Longitude}
+                
+                example
+
+                  bbox=37.7902858,-122.4027371;37.7890649,-122.3993039
+
+          required: true
+          type: string
+      tags:
+        - TravelStops
+      responses:
+        '200':
+          description: An array of TravelStops objects
+          schema:
+            type: object
+            required: ['data', 'metadata']
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/TravelStop'
+              metadata:
+                type: object
+                required: ['count']
+                properties:
+                  count:
+                    type: integer
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/TravelStop'
+
+  # PUT OPERATION TO UPDATE
+  '/travel-stops/{id}':
+    put:
+      tags:
+        - TravelStops
+      summary: Update TravelStop
+      operationId: api.travel_stops.put
+      description: Updates a TravelStop
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          # format: uuid ?
+        - in: body
+          name: travel_stop
+          description: updated fields of TravelStop
+          required: true
+          schema:
+            $ref: '#/definitions/TravelStop'
+      responses:
+        "200":
+          description: TravelStop response
+          schema:
+            $ref: '#/definitions/TravelStop'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+
+
+
+definitions:
+  # Begin GEOJSON
+  # Somehow let this be reffed instead: http://azimi.me/2015/07/16/split-swagger-into-smaller-files.html
+  Geometry:
+    type: object
+    description: GeoJSon geometry
+    discriminator: type
+    required:
+      - type
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#geometry-objects
+    properties:
+      type:
+        type: string
+        enum:
+        - Point
+        - LineString
+        - Polygon
+        - MultiPoint
+        - MultiLineString
+        - MultiPolygon
+        description: the geometry type
+  
+  Point2D:
+    type: array
+    maxItems: 2
+    minItems: 2
+    items:
+      type: number
+  
+  
+  Point:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id2
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            $ref: '#/definitions/Point2D'
+    
+  LineString:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id3
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            type: array
+            items:
+              $ref: '#/definitions/Point2D'
+
+  Polygon:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id4
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            type: array
+            items:
+              type: array
+              items:
+                $ref: '#/definitions/Point2D'
+      
+  MultiPoint:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id5
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            type: array
+            items:
+              $ref: '#/definitions/Point2D'
+            
+  MultiLineString:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id6
+    allOf:
+      - $ref: "#/definitions/Geometry"   
+      - properties:
+          coordinates:
+            type: array
+            items:
+              type: array
+              items:
+                $ref: '#/definitions/Point2D'
+      
+      
+  MultiPolygon:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#id6
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            type: array
+            items:
+              type: array
+              items:
+                type: array
+                items:
+                  $ref: '#/definitions/Point2D'
+      
+  GeometryCollection:
+    type: object
+    description: GeoJSon geometry collection
+    required:
+     - type
+     - geometries
+    externalDocs:
+      url: http://geojson.org/geojson-spec.html#geometrycollection
+    properties:
+      type:
+        type: string
+        enum:
+        - GeometryCollection
+      geometries:
+        type: array
+        items:
+          $ref: '#/definitions/Geometry'
+  #  END GEOJSON
+
+  TravelStop:
+    type: object
+    description: A GeoJson TravelStop
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            $ref: '#/definitions/Point2D'
+          properties:
+            type: object
+            properties:
+              id:
+                type: string
+                # format: uuid ?
+                readOnly: true
+              code:
+                type: string
+                readOnly: true
+              route_id:
+                type: string
+                readOnly: true
+              contact_email:
+                type: string
+                readOnly: true
+              source:
+                type: string
+                readOnly: true
+              created:
+                type: string
+                format: date-time
+                readOnly: true
+              modified:
+                type: string
+                format: date-time
+                readOnly: true
+
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
