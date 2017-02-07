@@ -49,7 +49,7 @@ paths:
                 
                 example
 
-                  bbox=37.7902858,-122.4027371;37.7890649,-122.3993039
+                  bbox=51.98866,4.500078;52.381907,4.6292
 
           required: true
           type: string
@@ -248,38 +248,44 @@ definitions:
   TravelStop:
     type: object
     description: A GeoJson TravelStop
-    allOf:
-      - $ref: "#/definitions/Geometry"
-      - properties:
-          coordinates:
-            $ref: '#/definitions/Point2D'
-          properties:
-            type: object
-            properties:
-              id:
-                type: string
-                # format: uuid ?
-                readOnly: true
-              code:
-                type: string
-                readOnly: true
-              route_id:
-                type: string
-                readOnly: true
-              contact_email:
-                type: string
-                readOnly: true
-              source:
-                type: string
-                readOnly: true
-              created:
-                type: string
-                format: date-time
-                readOnly: true
-              modified:
-                type: string
-                format: date-time
-                readOnly: true
+    properties:
+      type:
+        type: string
+        default: Feature
+      geometry:
+        type: object
+        allOf:
+          - $ref: "#/definitions/Geometry"
+          - properties:
+              coordinates:
+                $ref: '#/definitions/Point2D'
+      properties:
+        type: object
+        properties:
+          id:
+            type: string
+            # format: uuid ?
+            readOnly: true
+          code:
+            type: string
+            readOnly: true
+          route_id:
+            type: string
+            readOnly: true
+          contact_email:
+            type: string
+            readOnly: true
+          source:
+            type: string
+            readOnly: true
+          created:
+            type: string
+            format: date-time
+            readOnly: true
+          modified:
+            type: string
+            format: date-time
+            readOnly: true
 
   Error:
     type: object

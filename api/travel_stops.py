@@ -14,9 +14,14 @@ import copy
 # - Also handy to use as base if you want to try out the PUT Request
 # - Also used in tests
 
+
+
 travel_stop_fixture = {
-  "type": "Point",
-  "coordinates": [ 0,0 ],
+  "type": "Feature",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [0,0]
+  },
   "properties": {
     "id": "MyFixtureID",
     "code": "1A|",
@@ -56,7 +61,7 @@ def set_fixtures():
         fixture = copy.deepcopy(travel_stop_fixture)
         fixture['properties']['id'] = row[stop_id]
         fixture['properties']['code'] = row[stop_code]
-        fixture['coordinates'] = [float(row[stop_lat]), float(row[stop_lon])]
+        fixture['geometry']['coordinates'] = [float(row[stop_lon]), float(row[stop_lat])]
         fixture['route_id'] = row[stop_name]
         travel_stops[row[stop_id]] = fixture
 
@@ -66,10 +71,20 @@ set_fixtures()
 def get (bbox):
     """
         implement me:
-        bbox = "37.7902858,-122.4027371;37.7890649,-122.3993039"
+        bbox = "52.5961812,4.8997355;52.0029709,5.8053975"
     """
-    ts = {k: travel_stops[k] for k in travel_stops.keys()[:10]}
-    return { 'data': [t[1] for t in ts.items()], 'metadata': {'count':len(ts.keys())}}, 200
+    topleft, bottomright = bbox.split(';')
+    topleft_lat, topleft_lon = [float(x) for x in topleft.split(",")]
+    bottomright_lat, bottomright_lon = [float(x) for x in bottomright.split(",")]
+    results = []
+    for key, item in travel_stops.iteritems():
+        between_lon = (topleft_lon <= item["geometry"]["coordinates"][0] <= bottomright_lon)
+        between_lat = (bottomright_lat <= item["geometry"]["coordinates"][1] <= topleft_lat)
+        if between_lat and between_lon:
+            results.append(item)
+
+
+    return { 'data': results, 'metadata': {'count':len(results)}}, 200
 
 
 def put (id, travel_stop):
